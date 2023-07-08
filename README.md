@@ -63,8 +63,14 @@ freedombydesign/
 ┃ ┣ Time-piechart.png
 ┃ ┣ Visual Roadmap for Hiring Top Talent 1.png
 ┃ ┗ Visual Step by Step Guide and overview.png
+┣ Gold Mine - Job Descriptions, Samples and other/
+┃ ┣ Chat GPT Prompts.docx
+┃ ┣ Employee Interview script.docx
+┃ ┣ Employee Onboarding Checklist.xlsx
+┃ ┣ Employee Onboarding Email Template.docx
+┃ ┣ Job Titles and Descriptions.docx
+┃ ┗ One-on-one employee meeting script.docx
 ┣ Resources/
-┃ ┣ .$Main-Source-XML.drawio.bkp
 ┃ ┣ Main-Source-XML.drawio
 ┃ ┣ Starhint.png
 ┃ ┣ fbd-cover-mockup.png

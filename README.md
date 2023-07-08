@@ -8,7 +8,6 @@
 ![alt-text](Resources/fbd-cover-mockup.png)
 ## Directory Overview
 ```
-├── Bonus - Bonus: The Language of Outsourcing
 ├── Bonus 1 - The Language of Outsourcing
 ├── Bonus 2 - The Language of Outsourcing
 ├── Chapter 1 - Introducton - The Journey to 'Freedom by Design'
@@ -41,6 +40,7 @@
 ├── README.md
 └── Resources
     ├── Main-Source-XML.drawio
+    ├── Starhint.png
     ├── fbd-cover-mockup.png
     ├── freedombydesign.png
     └── hardbookcoverfbd.png
@@ -51,3 +51,6 @@
 ![alt-text](Resources/hardbookcoverfbd.png)
 
 
+## Disclaimer:
+
+The content provided in this repository is for informational purposes only. All rights reserved. No part of this document may be repurposed, reproduced, or created without written consent. Any unauthorized use or distribution of the content is strictly prohibited.

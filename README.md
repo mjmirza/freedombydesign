@@ -46,7 +46,8 @@
     └── hardbookcoverfbd.png
 ```
 
-![alt-text](Resources/hardbookcoverfbd.png)
 ![alt-text](Resources/freedombydesign.png)
+
+![alt-text](Resources/hardbookcoverfbd.png)
 
 

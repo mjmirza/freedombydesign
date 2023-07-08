@@ -1,7 +1,7 @@
 # Freedom by Design 
-## Release Date 29.July 2023
-### Book Title: Freedom by Design
-#### Author Mirza J. Iqbal
+## Book Title: Freedom by Design
+### Author Mirza J. Iqbal
+### Release Date 29.July 2023 
 
 ![alt-text](Resources/fbd-cover-mockup.png)
 ## Directory Overview

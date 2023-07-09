@@ -79,8 +79,7 @@ freedombydesign/
 ┗ README.md
 
 ```
-
-
+    
 ![alt-text](97%20-%20Resources/freedombydesign.png)
 
 ![alt-text](97%20-%20Resources/hardbookcoverfbd.png)

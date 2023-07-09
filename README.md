@@ -5,9 +5,9 @@
 #### If you like this Book, Don't forget to Bookmar, Pin, Fork or Star it.
 ...
 
-![alt-text](Resources/Starhint.png)
+![alt-text](97%20-%20Resources/Starhint.png)
 ### Book Cover & Design 
-![alt-text](Resources/fbd-cover-mockup.png)
+![alt-text](97%20-%20Resources/fbd-cover-mockup.png)
 ## Directory Overview
 ```
 freedombydesign/
@@ -81,9 +81,9 @@ freedombydesign/
 ```
 
 
-![alt-text](Resources/freedombydesign.png)
+![alt-text](97%20-%20Resources/freedombydesign.png)
 
-![alt-text](Resources/hardbookcoverfbd.png)
+![alt-text](97%20-%20Resources/hardbookcoverfbd.png)
 
 
 ## Disclaimer:

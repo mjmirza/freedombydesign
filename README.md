@@ -60,9 +60,14 @@ freedombydesign/
 ┃ ┣ Onlinejobs.ph Best Practices overview and guide.png
 ┃ ┣ Upwork Best Practices overview and guide.png
 ┃ ┗ Winning Art of Effective Hiring.png
+┣ 13 - Chapter 13 - Advance Strategies & Techniques - Create Better Tomorrow (People, Process, Performance)/
+┃ ┗ Advance Strategies & Techniques.png
+┣ 14 - Chapter 14 - Mirroring the Profit Rocket - Strategic Art and Science of Profitable Modeling/
+┃ ┗ Mirroring the Profit Rocket.png
 ┣ 97 - Resources/
 ┃ ┣ Main-Source-XML.drawio
 ┃ ┣ Starhint.png
+┃ ┣ bulkscript open ai script-byok
 ┃ ┣ fbd-cover-mockup.png
 ┃ ┣ freedombydesign.png
 ┃ ┗ hardbookcoverfbd.png

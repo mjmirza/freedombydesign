@@ -1,0 +1,1565 @@
+// Copyright (c) 2022-2023 mirza iqbal https://mirzaiqbal.com. All rights reserved.
+// This code is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0) license.
+// For more information, see https://creativecommons.org/licenses/by-nc-nd/4.0/
+// This code is provided as-is, without warranty of any kind.
+
+
+
+var configSheet = 'Settings';
+var apiTokenRange = 'D1';
+
+
+function onOpen() {
+
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('Save Values')
+    .addItem('Save all Formulas as text', 'saveAsFixedValue')
+    .addItem('Save GPT Formulas as text', 'saveGPTasFixedValue')
+    .addToUi();
+}
+
+function saveGPTasFixedValue() {
+  // rewrite formulas to data, but only when "our" certain formulas detected
+  var ss = SpreadsheetApp.getActiveSheet();
+  var dataValues = ss.getDataRange().getValues();
+  var dataFormulas = ss.getDataRange().getFormulas();
+  var formulaNames = ['GETANSWER(', 'GETFIRSTDRAFT(', 'GETSUMMARY(', 'GETPARA(', 'GETTITLE(', 'GETTITLE2(', 'GETTITLE3(', 'GETINTRO(', 'GETINTRO2(', 'GETINTRO3(', 'GETKEYWORDS(', 'GETTWEET(', 'GETTHREAD(', 'GETMETA(', 'GETHTMLOUTLINE(', 'GETOUTLINE(', 'GPT3CUSTOM', 'GETIMAGEURL('];
+  for (var i = 0; i < dataFormulas.length; i++) {
+    for (var j = 0; j < dataFormulas[i].length; j++) {
+      //console.log('data[i][j]: ',i, j, dataFormulas[i][j]);
+      if (dataFormulas[i][j]) {
+        //console.log('formula detected!');
+        for (var k in formulaNames) {
+          if (dataFormulas[i][j].toUpperCase().indexOf(formulaNames[k]) > -1) ss.getRange(i + 1, j + 1).setValue(dataValues[i][j]);
+          //if(dataFormulas[i][j].indexOf(formulaNames[k])>-1) console.log('it is GPT formula!', formulaNames[k], i+1, j+1);
+        }
+      }
+    }
+  }
+}
+
+function saveAsFixedValue() {
+  // This function prevents the API being called each time the sheet is refreshed or updated to save your API credits. 
+  var ss = SpreadsheetApp.getActiveSheet();
+  var data = ss.getDataRange().getValues();
+  ss.getRange(1, 1, data.length, data[0].length).setValues(data);
+}
+function gpt3Custom_generalTurbo(rangestr, val) {
+
+  if (!rangestr) return "";
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/chat/completions';
+
+  var prompt = sspSources.getRange(rangestr).getValue();
+  //console.log('prompt:', prompt);
+  if (!prompt) return "no prompt provided";
+
+  var data = {
+    "model": "gpt-3.5-turbo",
+    "messages": [{ role: "user", content: prompt + "\n\n" + val }],
+    "temperature": 0.82,
+    "max_tokens": 2000,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 0.8
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+  return openAIrequestTurbo(params);
+}
+function gpt3Custom_generalGPT4(rangestr, val) {
+
+  if (!rangestr) return "";
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/chat/completions';
+
+  var prompt = sspSources.getRange(rangestr).getValue();
+  //console.log('prompt:', prompt);
+  if (!prompt) return "no prompt provided";
+
+  var data = {
+    "model": "gpt-4",
+    "messages": [{ role: "user", content: prompt + "\n\n" + val }],
+    "temperature": 0.82,
+    "max_tokens": 2500,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 0.8
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+  return openAIrequestTurbo(params);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function gpt3Custom_general(rangestr, val) {
+
+  if (!rangestr) return "";
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var prompt = sspSources.getRange(rangestr).getValue();
+  //console.log('prompt:', prompt);
+  if (!prompt) return "no prompt provided";
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": prompt + "\n\n" + val,
+    "temperature": 0.78,
+    "max_tokens": 2000,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 0.8
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+  return openAIrequest(params);
+}
+function openAIrequest(params) {
+
+  if (!params?.apitoken) return 'no apikey provided!';
+  if (!params?.url || !params?.data) return 'no input params provided!';
+
+  var options = {
+    headers: {
+      'Authorization': 'Bearer ' + params?.apitoken,
+      'Content-Type': 'application/json'
+    },
+    muteHttpExceptions: true,
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(params?.data)
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(params.url, options);
+    // console.log(response.getAllHeaders());
+    // console.log(response.getContentText());
+    //console.log(response.getResponseCode());
+    var resp = JSON.parse(response.getContentText());
+
+    console.log(resp?.choices?.[0]?.text);
+
+    if (resp?.error?.message) return resp?.error?.message;
+  } catch (e) {
+    console.log('error', e);
+    return 'Error ' + e;
+  }
+
+  if (params?.type == 'url') return resp?.data?.[0]?.url;
+
+  return resp?.choices?.[0]?.text;
+
+}
+function openAIrequestTurbo(params) {
+
+  if (!params?.apitoken) return 'no apikey provided!';
+  if (!params?.url || !params?.data) return 'no input params provided!';
+
+  var options = {
+    headers: {
+      'Authorization': 'Bearer ' + params?.apitoken,
+      'Content-Type': 'application/json'
+    },
+    muteHttpExceptions: true,
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(params?.data)
+  };
+
+  try {
+    var response = UrlFetchApp.fetch(params.url, options);
+    // console.log(response.getAllHeaders());
+    // console.log(response.getContentText());
+    //console.log(response.getResponseCode());
+    var resp = JSON.parse(response.getContentText());
+    console.log(resp?.choices?.[0]?.message['content']);
+
+    //console.log(resp?.choices?.[0]?.text);
+
+    if (resp?.error?.message) return resp?.error?.message;
+  } catch (e) {
+    console.log('error', e);
+    return 'Error ' + e;
+  }
+
+  if (params?.type == 'url') return resp?.data?.[0]?.url;
+
+  return resp?.choices?.[0]?.message['content'];
+
+}
+
+
+
+
+
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom1(val) {
+  return gpt3Custom_general('B2', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom2(val) {
+  return gpt3Custom_general('B3', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom3(val) {
+  return gpt3Custom_general('B4', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom4(val) {
+  return gpt3Custom_general('B5', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom5(val) {
+  return gpt3Custom_general('B6', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom6(val) {
+  return gpt3Custom_general('B7', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom7(val) {
+  return gpt3Custom_general('B8', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom8(val) {
+  return gpt3Custom_general('B9', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom9(val) {
+  return gpt3Custom_general('B10', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom10(val) {
+  return gpt3Custom_general('B11', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom11(val) {
+  return gpt3Custom_general('B12', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom12(val) {
+  return gpt3Custom_general('B13', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom13(val) {
+  return gpt3Custom_general('B14', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom14(val) {
+  return gpt3Custom_general('B15', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom15(val) {
+  return gpt3Custom_general('B16', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom16(val) {
+  return gpt3Custom_general('B17', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom17(val) {
+  return gpt3Custom_general('B18', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom18(val) {
+  return gpt3Custom_general('B19', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom19(val) {
+  return gpt3Custom_general('B20', val);
+}
+/**
+ * using davinci model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom20(val) {
+  return gpt3Custom_general('B21', val);
+}
+
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom1GPT4(val) {
+  return gpt3Custom_generalGPT4('B2', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1GPT4  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom2GPT4(val) {
+  return gpt3Custom_general('B3', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom3GPT4(val) {
+  return gpt3Custom_generalGPT4('B4', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom4GPT4(val) {
+  return gpt3Custom_generalGPT4('B5', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom5GPT4(val) {
+  return gpt3Custom_generalGPT4('B6', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom6GPT4(val) {
+  return gpt3Custom_generalGPT4('B7', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom7GPT4(val) {
+  return gpt3Custom_generalGPT4('B8', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom8GPT4(val) {
+  return gpt3Custom_generalGPT4('B9', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom9GPT4(val) {
+  return gpt3Custom_generalGPT4('B10', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom10GPT4(val) {
+  return gpt3Custom_generalGPT4('B11', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom11GPT4(val) {
+  return gpt3Custom_generalGPT4('B12', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom12GPT4(val) {
+  return gpt3Custom_generalGPT4('B13', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom13GPT4(val) {
+  return gpt3Custom_generalGPT4('B14', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom14GPT4(val) {
+  return gpt3Custom_generalGPT4('B15', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom15GPT4(val) {
+  return gpt3Custom_generalGPT4('B16', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom16GPT4(val) {
+  return gpt3Custom_generalGPT4('B17', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom17GPT4(val) {
+  return gpt3Custom_generalGPT4('B18', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom18GPT4(val) {
+  return gpt3Custom_generalGPT4('B19', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom19GPT4(val) {
+  return gpt3Custom_generalGPT4('B20', val);
+}
+/**
+ * using the GPT4 model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom20GPT4(val) {
+  return gpt3Custom_generalGPT4('B21', val);
+}
+
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom1Turbo(val) {
+  return gpt3Custom_generalTurbo('B2', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1Turbo  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom2Turbo(val) {
+  return gpt3Custom_general('B3', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom3Turbo(val) {
+  return gpt3Custom_generalTurbo('B4', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom4Turbo(val) {
+  return gpt3Custom_generalTurbo('B5', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom5Turbo(val) {
+  return gpt3Custom_generalTurbo('B6', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom6Turbo(val) {
+  return gpt3Custom_generalTurbo('B7', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom7Turbo(val) {
+  return gpt3Custom_generalTurbo('B8', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom8Turbo(val) {
+  return gpt3Custom_generalTurbo('B9', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom9Turbo(val) {
+  return gpt3Custom_generalTurbo('B10', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom10Turbo(val) {
+  return gpt3Custom_generalTurbo('B11', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom11Turbo(val) {
+  return gpt3Custom_generalTurbo('B12', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom12Turbo(val) {
+  return gpt3Custom_generalTurbo('B13', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom13Turbo(val) {
+  return gpt3Custom_generalTurbo('B14', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom14Turbo(val) {
+  return gpt3Custom_generalTurbo('B15', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom15Turbo(val) {
+  return gpt3Custom_generalTurbo('B16', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom16Turbo(val) {
+  return gpt3Custom_generalTurbo('B17', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom17Turbo(val) {
+  return gpt3Custom_generalTurbo('B18', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom18Turbo(val) {
+  return gpt3Custom_generalTurbo('B19', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom19Turbo(val) {
+  return gpt3Custom_generalTurbo('B20', val);
+}
+/**
+ * using the Turbo model.
+ * 
+ * @param {string} gpt3Custom1  using davinci model.
+ * @return  using davinci model.
+ * @customfunction
+ */
+function Custom20Turbo(val) {
+  return gpt3Custom_generalTurbo('B21', val);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Generate a Dalle2 image from a prompt.
+ * 
+ * @param {string} gettitle  using dalle 2.
+ * @return  Generate a Dalle2 image from a prompt.
+ * @customfunction
+ */
+function GETIMAGEURL(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/images/generations';
+
+  var data = {
+    prompt: val,
+    n: 1,
+    size: "1024x1024"
+  };
+
+  var params = {
+    //getresponse: 'data[0].url',//todo
+    type: 'url',
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+  //image_url = JSON.parse(responseJson).data[0].url;
+
+}
+
+/**
+ * Get a blog title.
+ * 
+ * @param {string} gettitle  using davinci model.
+ * @return  Get a blog title.
+ * @customfunction
+ */
+function GETTITLE(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Generate a high ctr article title from this keyword. Keep the keyword in the start of the title.\n\nbest puppy treats\nThe 10 Best Puppy Treats To Try: Your Dog Will LOVE You For It!\n\nhow to sharpen a pencil\nHow To Sharpen A Pencil: Subtle Tips You Probably Didn't Know\n\nbest car phone charger\nTop 10 Best Car Phone Chargers: Buyer's Guide\n\nis BJJ dangerous?\nIs BJJ Dangerous? Here Is What You Need To Know...\n\nshould you keep tropical fish as pets?\nShould You Keep Tropical Fish As Pets? The Pros And Cons\n\nchild won't eat cereal\nHelp! My Child Won't Eat Cereal, What Should I Do? [SOLVED!]\n\niPhone screen won't turn on\niPhone Screen won't Turn On: Here Are 5 Possible Causes & How To Fix It\n\nbest prams for toddlers\n10 Best Prams For Toddlers [Reviewed, Rated & Compared]\n\n" + val,
+    "temperature": 0.7,
+    "max_tokens": 125,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Get a blog title.
+ * 
+ * @param {string} gettitle2  using davinci model.
+ * @return  Get a blog title.
+ * @customfunction
+ */
+function GETTITLE2(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Generate a high ctr article titlefrom a keyword or phrase. Keep the keyword in the title. \n\nhow to shave your dog\nThe Ultimate Guide to Safely Shaving Your Dog\n\nhow to shave your dog\nDIY Dog Grooming: How to Safely Shave Your Furry Friend\n\nhow to shave your dog\nStep-by-Step Guide: How to Shave Your Dog Like a Pro\n\nhow to shave your dog\nHow To Shave Your Dog: The Dos and Don'ts\n\nhow to shave your dog\nKeep Your Pup Looking Sharp: Tips for Shaving Your Dog\n\nhow to shave your dog\nDog Grooming 101: The Art of Shaving Your Canine Companion\n\nhow to shave your dog\nThe Top Tools You Need for Shaving Your Dog at Home\n\nhow to shave your dog\nFrom Furry to Fabulous: How to Safely Shave Your Dog at Home\n\nhow to shave your dog\nExpert Tips for Grooming Your Dog: How to Safely Shave Your Pooch\n\nhow to shave your dog\nShaving Your Dog at Home: 6 Common Mistakes and How to Avoid Them\n\n" + val,
+    "temperature": 0.7,
+    "max_tokens": 325,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Get a blog title.
+ * 
+ * @param {string} gettitle3  using davinci model.
+ * @return  Get a blog title.
+ * @customfunction
+ */
+function GETTITLE3(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Generate an awesome, catchy blog title or subheading from a keyword or phrase.\n\nbest washing machines for apartments\nTop 10 Washing Machines Perfect for Small Apartments\n\nbest washing machines for apartments\nSmall Space Living: 5 Best Washing Machines for Apartments\n\nbest washing machines for apartments\nThe Ultimate Guide to Finding the Best Washing Machines for Your Apartment\n\nbest washing machines for apartments\nSay Goodbye to Laundromats with These Compact Washing Machines for Apartments\n\nbest washing machines for apartments\nSave Space and Time: Our Top Picks for the Best Washing Machines for Apartments\n\nbest washing machines for apartments\nA Complete List of the Best Washing Machines for Apartment Dwellers\n\nbest washing machines for apartments\nNo More Trips to the Laundromat: Best Washing Machines for Small Spaces\n\nbest washing machines for apartments\nSmall Apartment? No Problem! Our Expert Picks for the Best Washing Machines\n\nbest washing machines for apartments\nFind the Perfect Fit: Best Washing Machines for Apartments of All Sizes\n\nbest washing machines for apartments\nBest Washing Machines for Apartments: Size and Functionality Matter\n\n" + val,
+    "temperature": 0.7,
+    "max_tokens": 325,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Get a blog introduction.
+ * 
+ * @param {string} getintro  using davinci model.
+ * @return  Get a blog introduction.
+ * @customfunction
+ */
+function GETINTRO(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Using this text to write an engaging article introduction for this title. It should be written in a human tone and sound like a natural human conversational and friendly blog post introduction. Write it at an 5th grade reading level. write using elegant prose and contractions while using a good amount of perplexity and burstiness. Be original and creative keeping the text in the first person with \"i\" and \"you\". The introduction needs to consider 5 key things things:\n\nS - Search Intent - Include a statement of what the reader will learn and why they want to.\nP - Pain Points - Acknowledge what problem you are solving, the reader’s feelings, and their fear of making a mistake.\nE - Expertise - Mention your personal experience or that you've been studying and researching this topic for a long time.\nA - Audience - Know exactly who the article is for.\nR - Rapport - Be likeable and interesting. Create an emotional connection with the reader through evocative and emotional language.\n\n\nIs kenjutsu better than kendo? A Comprehensive Comparison of the Two Martial Arts for Beginners\n\nAre you curious about the differences between Kenjutsu and Kendo? Have you been wanting to start one but having trouble deciding between the two? I've been there- there are so many different martial arts disciplines, choosing just ONE to dedicate your time to isn't easy. Again, I have been there, and it lead to me trying a bit of them all for years on end! You probably don't want to do all of that, so I'm here to help! \n\nIn this article, I'll break down the key differences between Kenjutsu and Kendo so you have all the info you need to make an informed decision. Together we'll explore everything from how each style is practiced, the equipment used, their respective histories, and more. By the end of this article, you will have gained enough knowledge to know which style works best for your goals, whether that’s self-defense, competition, or just getting fit! So let's dive in and take a closer look at these two popular martial arts!\n\n" + val,
+    "temperature": 0.85,
+    "max_tokens": 3200,
+    "top_p": 1,
+    "frequency_penalty": 0.85,
+    "presence_penalty": 0.85
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Get a blog introduction.
+ * 
+ * @param {string} getintro2  using davinci model.
+ * @return  Get a blog introduction.
+ * @customfunction
+ */
+function GETINTRO2(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Use the information provided to write a compelling blog post introduction. It should be written in a modern human-sounding tone, confident, conversational and friendly. Write it at a 6th grade reading level, using elegant prose, varying sentence length and complexity, use contractions and switch up the flow and cadence of each sentence, with a good amount of perplexity and burstiness. Be original and creative keeping the text in the first person with \"we\" and \"you\". The introduction needs to consider 5 key things things:\n\nS - Search Intent - Make it very clear what they will gain from the article.\nP - Pain Points - Acknowledge their problem and how this article will solve it, consider the reader’s feelings and fears.\nE - Expertise - naturally convey that you are knowledgable about the topic or that you've done the work researching this topic.\nA - Audience - the intro should confidently display that you know exactly who the article is for.\nR - Rapport - Be personable, likeable and interesting, human-sounding and using humor and wit to create a sense of familarity. Create an emotional connection with the reader through evocative and emotional language.\n\n\nIs kenjutsu better than kendo? A Comprehensive Comparison of the Two Martial Arts for Beginners\n\nIf you're anything like me, before you start something, you wanna know ALL the facts! So, if you're considering starting either Kenjutsu or Kendo you're doing the right thing by researching first. As you know, starting anything (a new martial art, especially) is going to take a lot of time and dedication. It's a big commitment. I've been there- there are so many different martial arts disciplines, choosing just ONE to dedicate your time to isn't easy. The worst thing would be to start and stop, because it wasn't the right fit. I'm going to help you avoid all of that...p! \n\nIn this post, I'll break down the key differences between Kenjutsu and Kendo so you have all the info you need to make an informed decision. We'll explore everything from how each style is practiced, any equipment used, their respective histories, and more. Hopefully, you'll have gained enough of an understanding to make the best choice for your goals; whether that’s self-defense, to compete, or simply to get fit!\n\n" + val,
+    "temperature": 0.75,
+    "max_tokens": 3000,
+    "top_p": 1,
+    "frequency_penalty": 0.75,
+    "presence_penalty": 0.75
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+
+/**
+ * Get a blog introduction.
+ * 
+ * @param {string} getintro3  using davinci model.
+ * @return  Get a blog introduction.
+ * @customfunction
+ */
+function GETINTRO3(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Using this prompt and craft an engaging and compelling introduction for this blog post. It requires elegant prose and should sound and read like a natural slightly informal human conversation. Keep it friendly as though you are talking to somebody familiar but still formal, as it is an introduction. Writing at a fifth-grade reading level, the goal is to be original and creative, alternating between long and short sentences, and varying the complexity and burstiness. It will also use contractions and a good amount of perplexity to keep the reader interested and feel cmpelled to read on. There are five critical things to consider: The readers search Intent, their pain points, Displaying your expertise, and building rapport.\n\n" + val,
+    "temperature": 0.75,
+    "max_tokens": 2200,
+    "top_p": 1,
+    "frequency_penalty": 0.15,
+    "presence_penalty": 0.15
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Return a paragraph for a keyword, heading or topic.
+ * 
+ * @param {string} getpara  using davinci model.
+ * @return  Return a paragraph for a keyword, heading or topic.
+ * @customfunction
+ */
+function GETPARA(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Write about this topic as if it is an except in a text. Write three detailed paragraphs on this topic in a natural modern human-sounding tone, very conversational, use elegant prose and switch up the cadence and rhythm with each line. It should read at a 6th grade level, no repetition, no detectable language patterns.\n\nhow to sharpen a pencil\nThe easiest way to sharpen a pencil, is to use a pencil sharpener. Simple enough, right? You can either use a standard one or a battery-operated one. Another way, if you don't own a pencil sharpener, would be to use a sharp knife. This can be a little dangerous, though, so it isn't recommended. But as a last resort, it is, at least, an option.\n\nis BJJ dangerous?\nInterestingly enough, BJJ is considered one of the least dangerous fighting styles out there! Some go as far as to call it a gentle combat sport. But, by its very nature as a combat sport, it could still be considered dangerous and there are some possible injuries you should be aware of if you are considering starting the sport.\n\n" + val,
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a meta description.
+ * 
+ * @param {string} getmeta  using davinci model.
+ * @return  Generate a meta description.
+ * @customfunction
+ */
+function GETMETA(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Can you generate an amazing, creative and unique meta description for me that takes into consideration best practices for length, keywords, action words, differentiation from competitors, accuracy, and optimization for different search engines, while being non-detectable and including a good amount of perplexity and burstiness? The keyword for the meta description is:\n\ndo dogs love their owners\n\nUh, the age-old question: do dogs love their owners? It's an interesting on for sure, and the answers might leave you more questions! But if you are interested, we've done the research! Read on to learn the best practices for showing your pup the love they deserve, so you can answer that question for yourself (with a YES!)\n\nbest writing prompts\n\nWe've compiled a list of the best writing prompts to help you unlock your creative potential and get inspiration for your next project. These prompts are designed to inspire and prod your creativity, helping you to explore new ideas and thoughts that will capture your readers' attention. Unlock your creativity with these inspiring writing prompts today!\n\nhow to change a tire\n\nThis is the straight to the point, step-by-step guide you've been looking for! How to change a tire, what you need, what you should know (without all the fluff!) So you can get back on the road quickly and safely. We also include tips and tricks on how to make the job easier, so you can do it without even looking, next time!\n\ntaking control of your life\n\nFeeling overwhelmed? Taking control of your life can seem scary and, oftentimes, impossible, but it doesn't have to be! We've got the tips, tricks and strategies you need to start taking the reins and getting back in charge. Read on to learn how to start making informed decisions, how to set goals that are actually effective, and how to obtain a life of balance and harmony.\n\n" + val,
+    "temperature": 0.75,
+    "max_tokens": 256,
+    "top_p": 1,
+    "frequency_penalty": 0.07,
+    "presence_penalty": 0.27
+  };
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Summarize text into bullet points.
+ * 
+ * @param {string} getsummary  using davinci model.
+ * @return  Summarize text into bullet points.
+ * @customfunction
+ */
+function GETSUMMARY(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Simplify this text for an 8th grader and summarize it into bullet points:\n\n " + val,
+    "temperature": 0.7,
+    "max_tokens": 2000,
+    "top_p": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1,
+    "stop": ["###"]
+  }
+  /*var data = {
+  "model": "text-davinci-003",
+  "prompt": "Simplify this text for an 8th grader and summarize it into bullet points:\nSony Music Entertainment (SME), also known as simply Sony Music, is an American multinational music company. Being owned by the parent conglomerate Sony Group Corporation, it is part of the Sony Music Group,[4] which is owned by Sony Entertainment and managed by the American umbrella division of Sony.\nIt was originally founded in 1929 as American Record Corporation and renamed as Columbia Recording Corporation in 1938, following its acquisition by the Columbia Broadcasting System. In 1966, the company was reorganized to become CBS Records, and Sony Corporation bought the company in 1988, renaming it under its current name in 1991. In 2004, Sony and Bertelsmann established a 50-50 joint venture known as Sony BMG, which transferred the businesses of Sony Music and Bertelsmann Music Group into one entity. However, in 2008, Sony acquired Bertelsmann's stake, and the company reverted to the Sony Music name shortly after; the buyout allowed Sony to acquire all of BMG's labels, which led to the relaunch of BMG, as BMG Rights Management. All of BMG's former labels (Arista, Jive, LaFace, J, etc.) would eventually be absorbed into RCA Records (also formerly owned by BMG) in 2011. Arista Records would later go on to be revived in 2018.\n\n Sony Music Entertainment, also known as simply Sony Music, is an American multinational music company owned by Sony Group Corporation.\n• It was originally founded in 1929 as American Record Corporation and renamed as Columbia Recording Corporation in 1938.\n• In 1966, it was reorganized and became CBS Records, and Sony Corporation bought the company in 1988.\n• Sony and Bertelsmann established a 50-50 joint venture known as Sony BMG in 2004, which merged the businesses of Sony Music and Bertelsmann Music Group.\n• In 2008, Sony acquired Bertelsmann's stake, reverting the company to the Sony Music name.\n• BMG's labels (Arista, Jive, LaFace, J, etc.) were absorbed into RCA Records in 2011, and Arista Records was revived in 2018.\n###\n" + val,
+  "temperature": 0.7,
+  "max_tokens": 1500,
+  "top_p": 1,
+  "frequency_penalty": 1,
+  "presence_penalty": 1,
+  "stop": ["###"]
+  }*/
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Answer a question with a simple answer.
+ * 
+ * @param {string} getanswer  using davinci model.
+ * @return  Answer a question with a simple answer.
+ * @customfunction
+ */
+function GETANSWER(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "I am an answer bot and I answer questions with factual information about anything.\n\n\nWho is Batman?\nBatman is a fictional comic book character.\n\nWhat is torsalplexity?\n?\n\nWhat is Devz9?\n?\n\nWho is George Lucas?\nGeorge Lucas is American film director and producer famous for creating Star Wars.\n\nWhat is the capital of California?\nSacramento.\n\nWhat orbits the Earth?\nThe Moon.\n\nWho is Fred Rickerson?\n?\n\nIs Arielle Phoenix amazing?\nHeck yeah, she is!\n\nWho is Alvan Muntz?\n?\n\nWhat is Kozar-09?\n?\n\nHow many moons does Mars have?\nTwo, Phobos and Deimos.\n\nWhat is a studio monitor?\nStudio monitors are loudspeakers in speaker enclosures specifically designed for professional audio production applications, such as recording studios, filmmaking, television studios, radio studios and project or home studios, where accurate audio reproduction is crucial.\n" + val,
+    "temperature": 0.2,
+    "max_tokens": 285,
+    "top_p": 1,
+    "best_of": 2,
+    "frequency_penalty": 1,
+    "presence_penalty": 1,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Answer a question with a detailed answer.
+ * 
+ * @param {string} getanswer2  using davinci model.
+ * @return  Answer a question with a detailed answer.
+ * @customfunction
+ */
+function GETANSWER2(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Answer the question and give a bit more context explaining the answer. use elegant prose and write in a modern human sounding tone.\n\nCan you make bread with just flour water and salt?\nYes and no, (you need some sort of oil, too). These 4 ingredients, flour, water, oil and salt, can be used to make dough for a quick flatbread. It is a no-yeast dough and takes just a few minutes to cook in a stovetop skillet. Definitely a simple dough recipe.\n" + val,
+    "temperature": 0.5,
+    "max_tokens": 600,
+    "top_p": 1,
+    "best_of": 1,
+    "frequency_penalty": 1,
+    "presence_penalty": 1,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Get comma-separated related keywords.
+ * 
+ * @param {string} getkeywords  using davinci model.
+ * @return  Get comma-separated related keywords.
+ * @customfunction
+ */
+function GETKEYWORDS(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Come up with some additional SEO keywords that you would find in a top-ranking article for this topic and put them into a comma-separated list." + val,
+    "temperature": 0.7,
+    "max_tokens": 400,
+    "top_p": 1.0,
+    "best_of": 2,
+    "frequency_penalty": 0.8,
+    "presence_penalty": 0,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a tweet for a topic.
+ * 
+ * @param {string} gettweet  using davinci model.
+ * @return  Generate a tweet for a topic.
+ * @customfunction
+ */
+function GETTWEET(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "write an engaging tweet for this topic. The tweet should inspire conversation. The tweet could be written in an insightful, inspiring or controversial tone, the topic will determine which tone but ensure it is human-sounding.\n\nvoting for president\n\nEvery vote counts! Your voice matters in this election - make sure you cast your ballot and be heard! #VotingMatters #ChooseYourFuture\n\ntaking life into your own hands\n\nYou have the power to create change in your life - don't wait for someone else to make it happen. #TakeCharge #OwnYourFuture\n\nseo tip for the day\n\nSEO Tip For Today: Don't just optimize for Google, that's just an algorithm. Optimize for the reader, your goal is to keep them on the page! #SEO \n\nmoney making online tip for the day\n \nMoney Making Tip For Today: Don't try to get rich overnight - focus on creating a system that will bring in passive income over time. #MoneyMakingOnline #ThinkLongTerm\n\naffirmation for positive thinking\n\nAffirmation For Today: \"I will focus on the positive in life and create a positive mindset.\" #PositiveVibes #ChooseHappiness #SayItOutLoud\n\nDIY tips\n\nDIY 101:  Take the time to learn the basics. It's the best way to ensure a job well done! #DIY #DoItYourself\n\n" + val,
+    "temperature": 0.83,
+    "max_tokens": 265,
+    "top_p": 1.0,
+    "best_of": 1,
+    "frequency_penalty": 0.22,
+    "presence_penalty": 0.23,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a thread for a topic.
+ * 
+ * @param {string} getthread  using davinci model.
+ * @return  Generate a thread for a topic.
+ * @customfunction
+ */
+function GETTHREAD(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Turn this into an engaging twitter thread, include hashtags.\n\n" + val,
+    "temperature": 0.87,
+    "max_tokens": 250,
+    "top_p": 1.0,
+    "best_of": 1,
+    "frequency_penalty": 0.22,
+    "presence_penalty": 0.23,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a HTML blog outline.
+ * 
+ * @param {string} gethtmloutline  using davinci model.
+ * @return  Generate a HTML blog outline.
+ * @customfunction
+ */
+function GETHTMLOUTLINE(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Write a html and detailed outline closely related to this topic or keyword. Do not include an introduction, do NOT title the output; and do not number the list. no dashes, no roman numerals no bullet points just plain text in formatted html markup h2 and h3 subheadings and sections. NO CONCLUSION. Stay on topic and cover the topic in depth.\n\nHow to Play Golf: Full Beginner's Guide\n\n<h2>How to Play Golf: Learning the Basics</h2>\n<h3>Learn The Object of The Game</h3>\n<h2>Understanding How The Ball Gets Into The Air<h2>\n<h3>Learn About the Different Types of Clubs</h3>\n  <h4>Driver</h4>\n  <h4>Woods</h4>\n  <h4>Irons</h4>\n  <h4>Wedges</h4>\n  <h4>Putter</h4>\n<h3>Understand the Rules of the Game</h3>\n  <h4>Stroke Play</h4>\n  <h4>Match Play</h4>\n  <h4>Four-ball</h4>\n  <h4>Foursomes</h4>\n  <h4>Scoring</h4>\n<h3>Learn About Golf Etiquette</h3>\n<h2>Understanding Basic Golf Swing Mechanics</h2>\n<h3>Learn About Golf Swing Fundamentals</h3>\n  <h4>  <h4>Grip</h4>\n  <h4>Posture</h4>\n  <h4>Alignment</h4>\n  <h4>Stance</h4>\n<h3>Developing a Full Swing</h3>\n  <h4>Takeaway</h4>\n  <h4>Backswing</h4>\n  <h4>Downswing</h4>\n  <h4>Impact</h4>\n  <h4>Follow Through</h4>\n<h2>Practicing the Short Game</h2>\n<h3>Understanding Different Types of Short Shots</h3>\n  <h4>Chip Shots</h4>\n  <h4>Pitch Shots</h4>\n  <h4>Bunker Shots</h4>\n  <h4>Flop Shots</h4>\n<h3>Developing a Short Game Swing</h3>\n  <h4>Setup</h4>\n  <h4>Backswing</h4>\n  <h4>Downswing</h4>\n  <h4>Impact</h4>\n  <h4>Follow Through</h4>\n<h2>Playing On The Course</h2>\n<h3>Learning Course Management</h3>\n  <h4>Course Layout</h4>\n  <h4>Strategy</h4>\n  <h4>Club Selection</h4>\n  <h4>Reading the Greens</h4>\n  <h4>Course Maintenance</h4>\n<h3>Knowing the Etiquette of the Course</h3>\n  <h4>Proper Attire</h4>\n  <h4>Pace of Play</h4>\n  <h4>Caddies</h4>\n  <h4>Course Rules and Regulations</h4>\n<h2>Final Thoughts on How to Play Golf</h2>\n\n" + val,
+    "temperature": 0.75,
+    "max_tokens": 1500,
+    "top_p": 1.0,
+    "best_of": 1,
+    "frequency_penalty": 0.20,
+    "presence_penalty": 0.20,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a blog outline.
+ * 
+ * @param {string} getoutline  using davinci model.
+ * @return  Generate a blog outline.
+ * @customfunction
+ */
+function GETOUTLINE(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Write a detailed outline of ten subheadings closely related to this topic or keyword. Do not include an introduction, do NOT title the output; and do not number the list. no dashes, no roman numerals no bullet points just plain text subheadings for each section of the post. NO CONCLUSION. Stay on topic and cover the topic in depth.\n\nWhy Is My Dog Not Eating?\n\nYour Dog May Not Be Eating Due To Medical Issues\nPossible Behavioral Reasons For Your Dog Not Eating\nThere May Be Issues With The Food Itself\nTips For Getting Your Dog To Eat\nCheck Your Dog’s Diet \nTry Different Foods \nIncorporate Variety In Your Dog's Diet\nEliminating Stress In Your Pup's Life\nTry Making Mealtime Fun!\nIt May Be Worth A Trip To The Vets...\n\n\nMyna Bird Talking: Everything You Need To Know About This Bird's Vocal Ability\n\nTypes of Myna Bird Sounds \nThe Role of Myna Bird Vocalizations \nThe Social Significance Of Myna Bird Calls \nEnvironmental Influences On Myna Bird Vocalizations \nFactors That Affect Myna Bird Vocalizations \nTypes of Myna Bird Vocalizations \nMyna Bird's Ability To Imitate Human Speech \nThe Benefits Of Myna Bird Vocalizations \nReasons Why Myna Birds Are So Popular \nCare and Training Tips To Get Your Myna Bird Talking\n\n" + val,
+    "temperature": 0.75,
+    "max_tokens": 1200,
+    "top_p": 1.0,
+    "best_of": 1,
+    "frequency_penalty": 0.20,
+    "presence_penalty": 0.20,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+
+/**
+ * Generate a basic first draft article.
+ * 
+ * @param {string} getfirstdraft  using davinci model.
+ * @return  Generate a basic first draft article.
+ * @customfunction
+ */
+function GETFIRSTDRAFT(val) {
+
+  if (!val) return "";
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sspSources = ss.getSheetByName(configSheet);
+  var apitoken = sspSources.getRange(apiTokenRange).getValue();
+
+  var url = 'https://api.openai.com/v1/completions';
+
+  var data = {
+    "model": "text-davinci-003",
+    "prompt": "Use this outline to create a 1000-word first draft blog post. Put subheadings in html tags and fill in all the subheadings. The tone should be modern and human-sounding, switching up the rhythm and cadence of each sentence. There should be no repetition and no detectable language patterns. Write in a unique tone and ensure there is a good amount of perplexity and burstiness with a range of short and long sentences.\n\n" + val,
+    "temperature": 0.8,
+    "max_tokens": 2048,
+    "top_p": 1.0,
+    "best_of": 1,
+    "frequency_penalty": 0.60,
+    "presence_penalty": 0.20,
+    "stop": ["###"]
+  }
+
+  var params = {
+    url: url,
+    data: data,
+    apitoken: apitoken
+  }
+
+  return openAIrequest(params);
+}
+

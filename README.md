@@ -48,8 +48,35 @@ freedombydesign/
 ┃ ┣ Aprox time Evaluation.png
 ┃ ┣ Visual Roadmap for Hiring Top Talent 2.png
 ┃ ┗ Visual Step by Step Guide.png
-┣ 100 - Resources/
-┃ ┣ Main-Source-XM
+┣ 11 - Chapter 11 - Optimal Hiring 'Action Plan' - Attracting the Right Talent/
+┃ ┣ Craiglist Process.png
+┃ ┣ Fiverr Process overview.png
+┃ ┣ Freelancer.com Process overview.png
+┃ ┣ Optimal Hiring Action Plan.png
+┃ ┗ Upword Process overview.png
+┣ 12 - Chapter 12 - Winning Art of Effective Hiring - Best Practices and Lessons Learned/
+┃ ┣ Fiver Best Practices overview and guide.png
+┃ ┣ Freelancer.com Best Practices overview and guide.png
+┃ ┣ Onlinejobs.ph Best Practices overview and guide.png
+┃ ┣ Upwork Best Practices overview and guide.png
+┃ ┗ Winning Art of Effective Hiring.png
+┣ 97 - Resources/
+┃ ┣ Main-Source-XML.drawio
+┃ ┣ Starhint.png
+┃ ┣ fbd-cover-mockup.png
+┃ ┣ freedombydesign.png
+┃ ┗ hardbookcoverfbd.png
+┣ 98 -  Bonus 2 - The Language of Outsourcing/
+┃ ┣ The Language of Outsourcing 1.png
+┃ ┣ The Language of Outsourcing 2.png
+┃ ┣ The Language of Outsourcing 3.png
+┃ ┣ The Language of Outsourcing 4.png
+┃ ┗ The Language of Outsourcing 5.png
+┣ 99 - Bonus 1 - Notes/
+┃ ┣ Notes 1.png
+┃ ┣ Notes 2.png
+┃ ┗ Notes 3.png
+┗ README.md
 
 ```
 
